@@ -1,0 +1,62 @@
+from django.db import models
+from user.models import WinUser
+from detail.models import WinWine
+
+
+# Create your models here.
+class WinStore(models.Model):
+    store_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey("user.WinUser", models.DO_NOTHING)
+    store_address = models.CharField(max_length=200)
+    store_name = models.CharField(max_length=100)
+    store_reg_num = models.CharField(unique=True, max_length=20)
+    store_email = models.CharField(max_length=50)
+
+    class Meta:
+        managed = False
+        db_table = "win_store"
+
+
+class WinStoreExcel(models.Model):
+    store_excel_id = models.IntegerField(primary_key=True)
+    store = models.ForeignKey(WinStore, models.DO_NOTHING)
+    store_excel = models.CharField(max_length=300)
+
+    class Meta:
+        managed = False
+        db_table = "win_store_excel"
+
+
+class WinStoreUrl(models.Model):
+    store_url_id = models.AutoField(primary_key=True)
+    store = models.ForeignKey(WinStore, models.DO_NOTHING, related_name="storeUrl")
+    store_map_url = models.CharField(max_length=300)
+
+    class Meta:
+        managed = False
+        db_table = "win_store_url"
+
+
+class WinRevenue(models.Model):
+    revenue_id = models.AutoField(primary_key=True)
+    store = models.ForeignKey("WinStore", models.DO_NOTHING)
+    revenue_value = models.IntegerField()
+    revenue_date = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = "win_revenue"
+
+
+class WinSell(models.Model):
+    sell_id = models.AutoField(primary_key=True)
+    store = models.ForeignKey("WinStore", models.DO_NOTHING, related_name="storeSell")
+    wine = models.ForeignKey("detail.WinWine", models.DO_NOTHING)
+    sell_reg_time = models.DateTimeField()
+    sell_price = models.IntegerField()
+    sell_promot = models.TextField()
+    sell_state = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = "win_sell"
