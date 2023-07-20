@@ -20,7 +20,8 @@ function deleteElement(){
 			method: "POST",
 			headers: {
 				"X-CSRFToken": getCookie("csrftoken"),
-				"Content-Type":"application/json"},
+				"Content-Type":"application/json"
+			},
 			body: JSON.stringify({
 				cartDetailId: cartDetailId,
 			}),
@@ -31,7 +32,8 @@ function deleteElement(){
 			.then((data)=>alert(data["result"]))
 	
 		row.remove();
-		document.getElementById("allPrice").innerText = (allPrice - purchasePrice) + "원";
+		console.log(allPrice - purchasePrice);
+		document.getElementById("allPrice").innerText = (allPrice - purchasePrice) + " 원";
 	}
 	else{
 		return false;

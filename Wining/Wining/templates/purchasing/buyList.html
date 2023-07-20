@@ -20,12 +20,13 @@
 			<h1>결제</h1>
 		</div>
 	</div>
-	<form method="post" name="buyList" action="buy-list">
+	{% csrf_token %}
+	<form method="post" id="buyList" action="buy-list">
 		{% if cart_id != None %}
-			<input type="hidden" name="cartId" value="{{cart_id}}">
+			<input type="hidden" id="cartId" name="cartId" value="{{cart_id}}">
 		{% endif %}
 		{% for dto in dtos %}
-			<div class="row">
+			<div id ="{{dto.identifier}}" class="row">
 				<div class="col">
 				<input type="hidden" name="sellId" value="{{ dto.product_info }}">
 					<img src="{{ dto.wine_image }}" alt="{{ dto.wine_name }}">
@@ -53,26 +54,26 @@
 			</div>
 		{% endfor %}
 	
-	<div class="row">
-		<div class="col" style="text-align:right">
-			내 결제 포인트
+		<div class="row">
+			<div class="col" style="text-align:right">
+				내 결제 포인트
+			</div>
+			<div class="col" style="text-align:left">
+				<input type="text" id="userPoint" name="userPoint" value="{{user_point}}" readonly style="border:0px">
+			</div>
 		</div>
-		<div class="col" style="text-align:left">
-			<input type="text" name="userPoint" value="{{user_point}}" readonly style="border:0px">
+		<div class="row">
+			<div class="col" style="text-align:right">
+				합계
+			</div>
+			<div class="col" style="text-align:left">
+				<input type="text" id="allPrice" name="allPrice" value="{{all_price}}" readonly style="border:0px">
+			</div>
+			<div class="col">
+				<input type="submit" id="btnShowBuyList" value="결제">
+				<input type="button" id="btnCancel" value="결제 취소">
+			</div>
 		</div>
-	</div>
-	<div class="row">
-		<div class="col" style="text-align:right">
-			합계
-		</div>
-		<div class="col" style="text-align:left">
-			<input type="text" name="allPrice" value="{{all_price}}" readonly style="border:0px">
-		</div>
-		<div class="col">
-			<input type="submit" id="btnShowBuyList" value="결제">
-			<input type="button" id="btnCancel" value="결제 취소">
-		</div>
-	</div>
 	</form>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"

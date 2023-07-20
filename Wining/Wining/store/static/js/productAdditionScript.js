@@ -6,6 +6,53 @@ const wineList = document.getElementById("wineList");
 
 srhByName.addEventListener("keyup", searchByName)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 for (var i = 0; i < wineNames.length; i++){
 	wineNames[i].addEventListener("click", addElement);
 }

@@ -4,7 +4,7 @@ from django.template import loader
 from django.http.response import HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from purchasing.usecase import purchase_usecase as p
+from purchasing.usecase import purchase_usecase
 
 
 from django.utils.dateformat import DateFormat
@@ -16,7 +16,7 @@ from purchasing.db_access.query_set import (
     insert_purchase,
     get_store_lists,
     add_cart_info,
-    get_cart_info,
+    get_cart_id,
     get_cart_list_page_info,
 )
 
@@ -102,24 +102,28 @@ class BuyListView(View):
             all_price = dto["purchase_price"]
             dtos.append(dto)
 
-        else:
-            cart_info = get_cart_info(user_id=user_id)
-            if cart_info != None:
-                cart_id = cart_info.cart_id
-                infos = get_cart_list_page_info(cart_id=cart_id)
+        elif cart_id != None:
+            cart_id = get_cart_id(user_id=user_id)
+            
+                
+            infos = get_cart_list_page_info(cart_id=cart_id)
 
-                for info in infos:
-                    all_price += info.get("purchase_price")
-                    dto = formating(
-                        user=user_id,
-                        product_info=info.get("sell__sell_id"),
-                        quantity=info.get("cart_det_qnty"),
-                        price_per_one=info.get("sell__sell_price"),
-                        wine_name=info.get("sell__wine__wine_name"),
-                        wine_image=info.get("sell__wine__wine_image"),
-                    )
-                    dtos.append(dto)
-                context["cart_id"] = cart_id
+            for info in infos:
+                all_price += info.get("purchase_price")
+                dto = formating(
+                    user=user_id,
+                    identifier = info.get("cart_det_id"),
+                    product_info=info.get("sell__sell_id"),
+                    quantity=info.get("cart_det_qnty"),
+                    price_per_one=info.get("sell__sell_price"),
+                    wine_name=info.get("sell__wine__wine_name"),
+                    wine_image=info.get("sell__wine__wine_image"),
+                )
+                dtos.append(dto)
+            context["cart_id"] = cart_id
+        
+        else:
+            return redirect("purchaseError")
 
         context["dtos"] = dtos
         context["all_price"] = all_price
@@ -136,7 +140,7 @@ class BuyListView(View):
         cart_id = request.POST.get("cartId", None)
         current_time = DateFormat(datetime.now()).format("Y-m-d H:i:s")
 
-        ps = p.PurchaseSequence(
+        sequence = purchase_usecase.PurchaseSequence(
             user=user_id,
             product_infos=sell_id,
             quantity_per_ones=quantity,
@@ -146,16 +150,15 @@ class BuyListView(View):
             current_time=current_time,
             cart_info=cart_id,
         )
-        result = ps.calc()
+        result = sequence.calc()
         if result == None:
-            template = loader.get_template("purchasing/buyList.html")
-            context = {"pointError": -1}
-            return HttpResponse(template.render(context, request))
+            return redirect("buyList")
         else:
             try:
                 insert_purchase(result)
 
-            except DatabaseError:
+            except DatabaseError as dberror:
+                print(dberror)
                 return redirect("purchaseError")
 
             return redirect("orderPage")
@@ -181,7 +184,7 @@ class AddPickListView(View):
             )
 
         except DatabaseError:
-            return redirect("errorPage")
+            return redirect("purchaseError")
 
         return redirect("cartList")
 
@@ -189,11 +192,10 @@ class AddPickListView(View):
 class PickListView(View):
     def get(self, request):
         user_id = "test1111"
-        cart_info = get_cart_info(user_id=user_id)
-        context = {}
-        if cart_info != None:
-            page_infos = get_cart_list_page_info(cart_id=cart_info.cart_id)
-            cart_id = cart_info.cart_id
+        cart_id = get_cart_id(user_id=user_id)
+        if cart_id != None:
+            page_infos = get_cart_list_page_info(cart_id=cart_id)
+            cart_id = cart_id
             all_price = 0
             for page_info in page_infos:
                 all_price += page_info.get("purchase_price")
@@ -215,10 +217,28 @@ class PickListView(View):
     def post(self, request):
         request_body = json.loads(request.body)
         cart_detail_id = request_body.get("cartDetailId", None)
-        detail_cart = WinCartDetail.objects.get(cart_det_id=cart_detail_id)
-        detail_cart.delete()
-
-        return JsonResponse({"result": "삭제되었습니다"}, status=200)
+        if cart_detail_id != None:
+            detail_cart = WinCartDetail.objects.get(cart_det_id=cart_detail_id)
+            detail_cart.delete()
+    
+            return JsonResponse({"result": "삭제되었습니다"}, status=200)
+        
+        else:
+            return JsonResponse({"result": "문제가 발생했습니다 잠시 후 다시 시도해주세요"}, status=200)
+        
+class RemoveBuyList(View):
+    @method_decorator(csrf_exempt)
+    def post(self, request):
+        request_body = json.loads(request.body)
+        cart_detail_id = request_body.get("cartDetailId", None)
+        if cart_detail_id != None:
+            detail_cart = WinCartDetail.objects.get(cart_det_id=cart_detail_id)
+            detail_cart.delete()
+    
+            return JsonResponse({"result": "삭제되었습니다"}, status=200)
+        
+        else:
+            return JsonResponse({"result": "문제가 발생했습니다 잠시 후 다시 시도해주세요"}, status=200)
 
 
 class OrderPageView(View):

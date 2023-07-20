@@ -4,13 +4,13 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.template import loader
 from django.http.response import HttpResponse, JsonResponse
-from store.models import WinStore, WinSell, WinStoreUrl
+from store.models import WinStore, WinSell
 from detail.models import WinWine
-from django.utils import timezone
-from user.models import WinUser, WinUserGrade
 from django.utils.dateformat import DateFormat
 from datetime import datetime
-from store.db_access.query_set import insert_store_info, insert_sell_info
+from store.db_access.query_set import insert_store_info, insert_sell_info,\
+    delete_store_info, check_store_product_info
+from django.db.utils import DatabaseError
 
 
 # Create your views here.
@@ -22,8 +22,9 @@ class StoreRegistrationView(View):
         return View.dispatch(self, request, *args, **kwargs)
 
     def get(self, request):
-        user_id = "test3334"
-        if WinStore.objects.filter(user_id=user_id):
+        user_id = "test3333"
+        print(check_store_product_info(user_id=user_id))
+        if check_store_product_info(user_id=user_id):
             return redirect("storeMyPage")
 
         else:
@@ -33,21 +34,30 @@ class StoreRegistrationView(View):
 
     def post(self, request):
         user_id = request.POST.get("userId", None)
-        store_address = request.POST.get("storeAddress", None)
+        main_address = request.POST.get("mainAddress", None)
+        detail_address = request.POST.get("detailAddress",None)
         store_name = request.POST.get("storeName", None)
         store_reg_num = request.POST.get("storeRegNum", None)
         store_email = request.POST.get("storeEmail")
         store_map_url = request.POST.get("storeMapUrl", None)
+        
+        store_address = main_address + ":" + detail_address
+        #파이썬에서도 정규식 검증하고 db insert하기
 
-        store = insert_store_info(
-            user_id=user_id,
-            store_address=store_address,
-            store_name=store_name,
-            store_reg_num=store_reg_num,
-            store_email=store_email,
-            store_map_url=store_map_url,
-        )
 
+        try:
+            insert_store_info(
+                user_id=user_id,
+                store_address=store_address,
+                store_name=store_name,
+                store_reg_num=store_reg_num,
+                store_email=store_email,
+                store_map_url=store_map_url,
+            )
+        
+        except DatabaseError:
+            redirect("storeError")
+        
         return redirect("productAddition")
 
 
@@ -57,7 +67,7 @@ class ProductAdditionView(View):
         return View.dispatch(self, request, *args, **kwargs)
 
     def get(self, request):
-        user_id = "test3334"
+        user_id = "test3333"
 
         store_info = WinStore.objects.get(user_id=user_id)
         if WinSell.objects.filter(store_id=store_info.store_id):
@@ -75,24 +85,42 @@ class ProductAdditionView(View):
             return HttpResponse(template.render(context, request))
 
     def post(self, request):
-        user_id = "test2222"
+        user_id = "test3333"
         store_id = request.POST.get("storeId", None)
         wine_ids = request.POST.getlist("wineId", None)
         sell_prices = request.POST.getlist("sellPrice", None)
         sell_promots = request.POST.getlist("sellPromot", None)
         sell_state = 1
+        btn_cancel_regist = request.POST.get("btnCancelRegist", None)
+        btn_product_add = request.POST.get("btnProductAdd", None)
+        btn_back = request.POST.get("btnBack", None)
         current_time = DateFormat(datetime.now()).format("Y-m-d H:i:s")
-
-        insert_sell_info(
-            user_id,
-            store_id,
-            wine_ids,
-            current_time,
-            sell_prices,
-            sell_promots,
-            sell_state,
-        )
-
+        
+        
+        if btn_product_add != None:
+            print("product add")
+            try:
+                insert_sell_info(
+                    user_id,
+                    store_id,
+                    wine_ids,
+                    current_time,
+                    sell_prices,
+                    sell_promots,
+                    sell_state,
+                )
+            except DatabaseError:
+                return redirect("storeError")
+        
+        elif btn_cancel_regist != None:
+            delete_store_info(store_id= store_id)
+            return redirect("storeRegistration")    #user mypage로 리다이렉트 해야함
+        
+        elif btn_back != None:
+            delete_store_info(store_id= store_id)
+            return redirect("storeRegistration")
+        
+        
         return redirect("storeMyPage")
 
 
@@ -136,7 +164,7 @@ class SearchProduct(View):
 
 class StoreMyPageView(View):
     def get(self, request):
-        user_id = "test2222"
+        user_id = "test3333"
         template = loader.get_template("store/storeMyPage.html")
         context = {"user_id": user_id}
 

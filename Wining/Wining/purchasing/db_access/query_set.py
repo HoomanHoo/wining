@@ -35,7 +35,7 @@ def insert_purchase(result: dict) -> None:
 
     for i in range(len(result.get("product_infos"))):
         purchase_detail_info = WinPurchaseDetail(
-            purchase_detail_id=i + 15,
+            purchase_detail_id=i + 33,
             purchase_id=purchase_info.purchase_id,
             sell_id=sell_ids[i],
             purchase_det_number=purchase_det_numbers[i],
@@ -69,29 +69,32 @@ def insert_purchase(result: dict) -> None:
         update_cart_info.save()
 
 
-@transaction.atomic(durable=True)
+@transaction.atomic
 def add_cart_info(user_id: str, sell_id: str, quantity: int, current_time: str):
-    cart_info = get_cart_info(user_id)
-
-    if cart_info == None:
+    cart_id = get_cart_id(user_id)
+    print(cart_id)
+    if cart_id == None:
+        print("cartId is None!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         cart_info = WinCart(
-            cart_id=3, user_id=user_id, cart_time=current_time, cart_state=1
+            cart_id=4, user_id=user_id, cart_time=current_time, cart_state=1
         )
         cart_info.save()
+        cart_id = cart_info.cart_id
 
     cart_detail_info = WinCartDetail(
-        sell_id=sell_id, cart_id=cart_info.cart_id, cart_det_qnty=quantity
+        sell_id=sell_id, cart_id=cart_id, cart_det_qnty=quantity
     )
     cart_detail_info.save()
 
 
-def get_cart_info(user_id: str) -> QuerySet or None:
-    try:
-        cart_info = WinCart.objects.get(user_id=user_id, cart_state=1)
-    except Exception as ex:
-        print(ex)
-        cart_info = None
-    return cart_info
+def get_cart_id(user_id: str) -> str or None:
+
+    cart_info = WinCart.objects.filter(user_id=user_id, cart_state=1).values("cart_id")
+    if len(cart_info) == 0:
+        cart_id = None
+    else:
+        cart_id = cart_info[0].get("cart_id")
+    return cart_id
 
 
 def get_cart_detail_infos(cart_id: str) -> QuerySet:
@@ -107,6 +110,7 @@ def get_cart_list_page_info(cart_id: str) -> QuerySet:
        `win_sell`.`sell_price`,
        `win_cart_detail`.`cart_det_qnty`,
        (`win_sell`.`sell_price` * `win_cart_detail`.`cart_det_qnty`) AS `purchase_price`
+       `win_cart_detail`.`cart_det_id`
     FROM `win_cart_detail`
     INNER JOIN `win_sell`
     ON (`win_cart_detail`.`sell_id` = `win_sell`.`sell_id`)

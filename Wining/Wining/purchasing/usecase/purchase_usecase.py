@@ -33,7 +33,7 @@ class PurchaseSequence:
         print("calcurating...")
         _quantity_all = 0
         print(self.price_all)
-
+        print("cart_id", self.cart_info)
         for i in range(len(self.price_per_ones)):
             _quantity_all += int(self.quantity_per_ones[i])
         if int(self.user_point) >= int(self.price_all):
@@ -50,13 +50,15 @@ class PurchaseSequence:
                 "price_per_ones": self.price_per_ones,
                 "user_point": user_point,
             }
+            
+            if self.cart_info != None:
+                result["cart_info"] = self.cart_info
+                print("product_info: ", type(result["product_infos"]))
 
         else:
             result = None
 
-        if self.cart_info != None:
-            result["cart_info"] = self.cart_info
-        print("product_info: ", type(result["product_infos"]))
+       
         return result
 
 
@@ -71,9 +73,11 @@ def formating(
     price_per_one: int,
     wine_name: str,
     wine_image: str,
+    identifier: str = None,
 ) -> dict:
     dto = {
         "user": user,
+        "identifier": identifier,
         "product_info": product_info,
         "quantity": quantity,
         "price_per_one": price_per_one,
