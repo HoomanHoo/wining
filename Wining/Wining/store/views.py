@@ -9,7 +9,7 @@ from detail.models import WinWine
 from django.utils.dateformat import DateFormat
 from datetime import datetime
 from store.db_access.query_set import insert_store_info, insert_sell_info,\
-    delete_store_info, check_store_product_info
+    delete_store_info, check_store_product_info, check_store_regist_number
 from django.db.utils import DatabaseError
 
 
@@ -22,7 +22,7 @@ class StoreRegistrationView(View):
         return View.dispatch(self, request, *args, **kwargs)
 
     def get(self, request):
-        user_id = "test3333"
+        user_id = "test5555"
         print(check_store_product_info(user_id=user_id))
         if check_store_product_info(user_id=user_id):
             return redirect("storeMyPage")
@@ -41,7 +41,7 @@ class StoreRegistrationView(View):
         store_email = request.POST.get("storeEmail")
         store_map_url = request.POST.get("storeMapUrl", None)
         
-        store_address = main_address + ":" + detail_address
+        store_address = main_address + " " + detail_address
         #파이썬에서도 정규식 검증하고 db insert하기
 
 
@@ -60,6 +60,26 @@ class StoreRegistrationView(View):
         
         return redirect("productAddition")
 
+class CheckStoreRegistNumberView(View):
+    def get(self, request):
+        reg_num = request.GET.get("regnum", None)
+        
+        if reg_num == None:
+            return JsonResponse({"result": "문제가 발생했습니다 잠시 후 다시 시도해주세요"}, status=200)
+        
+        
+        else:
+            
+            result = check_store_regist_number(reg_num = reg_num)
+            
+            if result == True:
+                return JsonResponse({"result": "유효한 사업자 등록번호입니다",
+                                     "code": "1"}, status=200)
+            
+            else:
+                return JsonResponse({"result": "이미 등록된 사업자 등록번호입니다",
+                                     "code": "-1"}, status=200)
+
 
 class ProductAdditionView(View):
     @method_decorator(csrf_exempt)
@@ -67,7 +87,7 @@ class ProductAdditionView(View):
         return View.dispatch(self, request, *args, **kwargs)
 
     def get(self, request):
-        user_id = "test3333"
+        user_id = "test5555"
 
         store_info = WinStore.objects.get(user_id=user_id)
         if WinSell.objects.filter(store_id=store_info.store_id):
@@ -85,7 +105,7 @@ class ProductAdditionView(View):
             return HttpResponse(template.render(context, request))
 
     def post(self, request):
-        user_id = "test3333"
+        user_id = "test5555"
         store_id = request.POST.get("storeId", None)
         wine_ids = request.POST.getlist("wineId", None)
         sell_prices = request.POST.getlist("sellPrice", None)
@@ -164,7 +184,7 @@ class SearchProduct(View):
 
 class StoreMyPageView(View):
     def get(self, request):
-        user_id = "test3333"
+        user_id = "test5555"
         template = loader.get_template("store/storeMyPage.html")
         context = {"user_id": user_id}
 

@@ -91,8 +91,12 @@ storeRegNum.addEventListener("keyup", () => {
 	let numResult = storeRegNumRegExp.test(storeRegNum.value);
 	
 	if(numResult == true){
-		document.getElementById("regNumCheck").value = 1;
-		document.getElementById("regNum").innerText = "유효한 형식입니다";
+		url = "/store/check-reqnum?regnum=" + storeRegNum.value
+		fetch(url).then((response) => response.json()).then((data) => {
+		let result = data
+		document.getElementById("regNumCheck").value = result["code"];
+		document.getElementById("regNum").innerText = result["result"];
+		})
 	}
 	else{
 		document.getElementById("regNumCheck").value = -1;
@@ -112,3 +116,5 @@ storeEmail.addEventListener("keyup", () => {
 		document.getElementById("email").innerText = "형식에 맞지 않습니다";
 	}
 });
+
+

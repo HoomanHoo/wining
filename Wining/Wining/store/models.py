@@ -18,12 +18,12 @@ class WinStore(models.Model):
 
 
 class WinStoreExcel(models.Model):
-    store_excel_id = models.IntegerField(primary_key=True)
+    store_excel_id = models.AutoField(primary_key=True)
     store = models.ForeignKey(WinStore, models.DO_NOTHING)
     store_excel = models.CharField(max_length=300)
 
     class Meta:
-        managed = False
+        # managed = False
         db_table = "win_store_excel"
 
 
@@ -39,7 +39,7 @@ class WinStoreUrl(models.Model):
 
 class WinRevenue(models.Model):
     revenue_id = models.AutoField(primary_key=True)
-    store = models.ForeignKey("WinStore", models.DO_NOTHING)
+    store = models.ForeignKey("WinStore", models.DO_NOTHING, default='')
     revenue_value = models.IntegerField()
     revenue_date = models.DateTimeField()
 
@@ -51,7 +51,7 @@ class WinRevenue(models.Model):
 class WinSell(models.Model):
     sell_id = models.AutoField(primary_key=True)
     store = models.ForeignKey("WinStore", models.DO_NOTHING, related_name="storeSell")
-    wine = models.ForeignKey("detail.WinWine", models.DO_NOTHING)
+    wine = models.ForeignKey("detail.WinWine", models.DO_NOTHING, default='')
     sell_reg_time = models.DateTimeField()
     sell_price = models.IntegerField()
     sell_promot = models.TextField()

@@ -7,7 +7,7 @@ from user.models import WinUser
 
 
 @transaction.atomic(durable=True)
-def insert_purchase(result: dict) -> None:
+def insert_purchase(result: dict) -> list:
     """
     purchaseUseCase 클래스의 calc() 함수의 연산 결과를 매개변수로 하여 Django ORM을 통해 DB에 구매 목록과 정보를 저장하는 함수이다.
     """
@@ -32,11 +32,11 @@ def insert_purchase(result: dict) -> None:
         purchase_price=purchase_price,
     )
     purchase_info.save()
-
+    purchase_id = purchase_info.purchase_id
     for i in range(len(result.get("product_infos"))):
         purchase_detail_info = WinPurchaseDetail(
-            purchase_detail_id=i + 33,
-            purchase_id=purchase_info.purchase_id,
+            # purchase_detail_id=i + 33,
+            purchase_id=purchase_id,
             sell_id=sell_ids[i],
             purchase_det_number=purchase_det_numbers[i],
             purchase_det_price=purchase_det_prices[i],
@@ -44,6 +44,9 @@ def insert_purchase(result: dict) -> None:
         )
         purchase_detail_infos.append(purchase_detail_info)
     WinPurchaseDetail.objects.bulk_create(purchase_detail_infos)
+    
+    purchase_detail_ids = WinPurchaseDetail.objects.filter(purchase_id = purchase_id).values_list("purchase_detail_id")
+    
 
     update_point = WinUser.objects.get(user_id=user_id)
     update_point.user_point = user_point
@@ -68,6 +71,7 @@ def insert_purchase(result: dict) -> None:
         update_cart_info.cart_state = -1
         update_cart_info.save()
 
+    return purchase_detail_ids
 
 @transaction.atomic
 def add_cart_info(user_id: str, sell_id: str, quantity: int, current_time: str):
@@ -76,7 +80,10 @@ def add_cart_info(user_id: str, sell_id: str, quantity: int, current_time: str):
     if cart_id == None:
         print("cartId is None!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         cart_info = WinCart(
-            cart_id=4, user_id=user_id, cart_time=current_time, cart_state=1
+            # cart_id=4, 
+            user_id=user_id, 
+            cart_time=current_time, 
+            cart_state=1
         )
         cart_info.save()
         cart_id = cart_info.cart_id
@@ -240,3 +247,7 @@ def get_user_point(user_id: str) -> int:
         .get("user_point")
     )
     return user_point
+
+
+def get_enc_receive_codes(cart_detail_id: str) -> list:
+    pass

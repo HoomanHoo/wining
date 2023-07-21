@@ -21,7 +21,7 @@
 		</div>
 	</div>
 	{% csrf_token %}
-	<form method="post" id="buyList" action="buy-list">
+	<form method="post" id="buyList" action="order-page">
 		{% if cart_id != None %}
 			<input type="hidden" id="cartId" name="cartId" value="{{cart_id}}">
 		{% endif %}

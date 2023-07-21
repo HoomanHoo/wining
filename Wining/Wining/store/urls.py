@@ -5,8 +5,9 @@ urlpatterns = [
     path(
         "store-registration",
         views.StoreRegistrationView.as_view(),
-        name="storeRegistration",
+        name="storeRegistration"
     ),
+    path("check-reqnum", views.CheckStoreRegistNumberView.as_view(), name="checkRegistNumber"),
     path(
         "product-addition", views.ProductAdditionView.as_view(), name="productAddition"
     ),

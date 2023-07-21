@@ -1,5 +1,6 @@
 from django.contrib import admin
-from purchasing.models import WinPurchase, WinPurchaseDetail, WinCart, WinCartDetail
+from purchasing.models import WinPurchase, WinPurchaseDetail, WinCart, WinCartDetail,\
+    WinReceiveCode
 
 
 # Register your models here.
@@ -30,9 +31,13 @@ class WinCartAdmin(admin.ModelAdmin):
 
 class WinCartDetailAdmin(admin.ModelAdmin):
     list_display = ("cart_det_id", "sell", "cart", "cart_det_qnty")
+    
+class WinReceiveCodeAdmin(admin.ModelAdmin):
+    list_display = ("receive_code_id", "receive_code")
 
 
 admin.site.register(WinPurchase, WinPurchaseAdmin)
 admin.site.register(WinPurchaseDetail, WinPurchaseDetailAdmin)
 admin.site.register(WinCart, WinCartAdmin)
 admin.site.register(WinCartDetail, WinCartDetailAdmin)
+admin.site.register(WinReceiveCode, WinReceiveCodeAdmin)

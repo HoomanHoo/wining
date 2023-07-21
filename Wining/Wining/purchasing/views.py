@@ -4,7 +4,8 @@ from django.template import loader
 from django.http.response import HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from purchasing.usecase import purchase_usecase
+from purchasing.usecase.purchase_usecase import calc, create_receive_code,\
+    encrypt_receive_code
 
 
 from django.utils.dateformat import DateFormat
@@ -30,7 +31,7 @@ import errorhandling
 # Create your views here.
 class StoreListView(View):
     def get(self, request):
-        wine_id = 9
+        wine_id = 5
         template = loader.get_template("purchasing/storeList.html")
 
         store_lists = get_store_lists(wine_id=wine_id)
@@ -140,7 +141,7 @@ class BuyListView(View):
         cart_id = request.POST.get("cartId", None)
         current_time = DateFormat(datetime.now()).format("Y-m-d H:i:s")
 
-        sequence = purchase_usecase.PurchaseSequence(
+        result = calc(
             user=user_id,
             product_infos=sell_id,
             quantity_per_ones=quantity,
@@ -150,13 +151,22 @@ class BuyListView(View):
             current_time=current_time,
             cart_info=cart_id,
         )
-        result = sequence.calc()
+        # result = sequence.calc()
         if result == None:
             return redirect("buyList")
         else:
             try:
-                insert_purchase(result)
-
+                receive_codes = []
+                enc_receive_codes = []
+                purchase_detail_ids = insert_purchase(result)
+                for i in range(len(purchase_detail_ids)):
+                    receive_code = create_receive_code(purchase_info= purchase_detail_ids[i])
+                    receive_codes.append(receive_code)
+                    enc_receive_code = encrypt_receive_code(receive_code= receive_code)
+                    enc_receive_codes.append(enc_receive_code)
+                    
+                    
+                    
             except DatabaseError as dberror:
                 print(dberror)
                 return redirect("purchaseError")
@@ -183,7 +193,8 @@ class AddPickListView(View):
                 current_time=current_time,
             )
 
-        except DatabaseError:
+        except DatabaseError as dbError:
+            print(dbError)
             return redirect("purchaseError")
 
         return redirect("cartList")
@@ -242,7 +253,56 @@ class RemoveBuyList(View):
 
 
 class OrderPageView(View):
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return View.dispatch(self, request, *args, **kwargs)
+    
+    
     def get(self, request):
+        user_id = "test1111"
         template = loader.get_template("purchasing/orderPage.html")
+        
         context = {}
         return HttpResponse(template.render(context, request))
+    
+    def post(self, request):
+        user_id = "test1111"
+        sell_id = request.POST.getlist("sellId", None)
+        quantity = request.POST.getlist("quantity", None)
+        purchase_price = request.POST.getlist("purchasePrice", None)
+        user_point = request.POST.get("userPoint", None)
+        all_price = request.POST.get("allPrice", None)
+        cart_id = request.POST.get("cartId", None)
+        current_time = DateFormat(datetime.now()).format("Y-m-d H:i:s")
+
+        result = calc(
+            user=user_id,
+            product_infos=sell_id,
+            quantity_per_ones=quantity,
+            price_per_ones=purchase_price,
+            user_point=int(user_point),
+            all_price=int(all_price),
+            current_time=current_time,
+            cart_info=cart_id,
+        )
+        # result = sequence.calc()
+        if result == None:
+            return redirect("buyList")
+        else:
+            try:
+                receive_codes = []
+                enc_receive_codes = []
+                purchase_detail_ids = insert_purchase(result)
+                for i in range(len(purchase_detail_ids)):
+                    receive_code = create_receive_code(purchase_info= purchase_detail_ids[i])
+                    receive_codes.append(receive_code)
+                    enc_receive_code = encrypt_receive_code(receive_code= receive_code)
+                    enc_receive_codes.append(enc_receive_code)
+                    
+                    
+                    
+            except DatabaseError as dberror:
+                print(dberror)
+                return redirect("purchaseError")
+
+            return redirect("orderPage")
