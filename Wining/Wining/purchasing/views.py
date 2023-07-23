@@ -4,8 +4,11 @@ from django.template import loader
 from django.http.response import HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from purchasing.usecase.purchase_usecase import calc, create_receive_code,\
-    encrypt_receive_code
+from purchasing.usecase.purchase_usecase import (
+    calc,
+    create_receive_code,
+    encrypt_receive_code,
+)
 
 
 from django.utils.dateformat import DateFormat
@@ -14,6 +17,7 @@ from purchasing.db_access.query_set import (
     get_product_info,
     get_info_of_buy_one,
     get_user_point,
+    insert_enc_receive_codes,
     insert_purchase,
     get_store_lists,
     add_cart_info,
@@ -105,15 +109,14 @@ class BuyListView(View):
 
         elif cart_id != None:
             cart_id = get_cart_id(user_id=user_id)
-            
-                
+
             infos = get_cart_list_page_info(cart_id=cart_id)
 
             for info in infos:
                 all_price += info.get("purchase_price")
                 dto = formating(
                     user=user_id,
-                    identifier = info.get("cart_det_id"),
+                    identifier=info.get("cart_det_id"),
                     product_info=info.get("sell__sell_id"),
                     quantity=info.get("cart_det_qnty"),
                     price_per_one=info.get("sell__sell_price"),
@@ -122,7 +125,7 @@ class BuyListView(View):
                 )
                 dtos.append(dto)
             context["cart_id"] = cart_id
-        
+
         else:
             return redirect("purchaseError")
 
@@ -131,47 +134,47 @@ class BuyListView(View):
 
         return HttpResponse(template.render(context, request))
 
-    def post(self, request):
-        user_id = "test1111"
-        sell_id = request.POST.getlist("sellId", None)
-        quantity = request.POST.getlist("quantity", None)
-        purchase_price = request.POST.getlist("purchasePrice", None)
-        user_point = request.POST.get("userPoint", None)
-        all_price = request.POST.get("allPrice", None)
-        cart_id = request.POST.get("cartId", None)
-        current_time = DateFormat(datetime.now()).format("Y-m-d H:i:s")
+    # def post(self, request):
+    #     user_id = "test1111"
+    #     sell_id = request.POST.getlist("sellId", None)
+    #     quantity = request.POST.getlist("quantity", None)
+    #     purchase_price = request.POST.getlist("purchasePrice", None)
+    #     user_point = request.POST.get("userPoint", None)
+    #     all_price = request.POST.get("allPrice", None)
+    #     cart_id = request.POST.get("cartId", None)
+    #     current_time = DateFormat(datetime.now()).format("Y-m-d H:i:s")
 
-        result = calc(
-            user=user_id,
-            product_infos=sell_id,
-            quantity_per_ones=quantity,
-            price_per_ones=purchase_price,
-            user_point=int(user_point),
-            all_price=int(all_price),
-            current_time=current_time,
-            cart_info=cart_id,
-        )
-        # result = sequence.calc()
-        if result == None:
-            return redirect("buyList")
-        else:
-            try:
-                receive_codes = []
-                enc_receive_codes = []
-                purchase_detail_ids = insert_purchase(result)
-                for i in range(len(purchase_detail_ids)):
-                    receive_code = create_receive_code(purchase_info= purchase_detail_ids[i])
-                    receive_codes.append(receive_code)
-                    enc_receive_code = encrypt_receive_code(receive_code= receive_code)
-                    enc_receive_codes.append(enc_receive_code)
-                    
-                    
-                    
-            except DatabaseError as dberror:
-                print(dberror)
-                return redirect("purchaseError")
+    #     result = calc(
+    #         user=user_id,
+    #         product_infos=sell_id,
+    #         quantity_per_ones=quantity,
+    #         price_per_ones=purchase_price,
+    #         user_point=int(user_point),
+    #         all_price=int(all_price),
+    #         current_time=current_time,
+    #         cart_info=cart_id,
+    #     )
+    #     # result = sequence.calc()
+    #     if result == None:
+    #         return redirect("buyList")
+    #     else:
+    #         try:
+    #             receive_codes = []
+    #             enc_receive_codes = []
+    #             purchase_detail_ids = insert_purchase(result)
+    #             for i in range(len(purchase_detail_ids)):
+    #                 receive_code = create_receive_code(
+    #                     purchase_info=purchase_detail_ids[i]
+    #                 )
+    #                 receive_codes.append(receive_code)
+    #                 enc_receive_code = encrypt_receive_code(receive_code=receive_code)
+    #                 enc_receive_codes.append(enc_receive_code)
 
-            return redirect("orderPage")
+    #         except DatabaseError as dberror:
+    #             print(dberror)
+    #             return redirect("purchaseError")
+
+    #         return redirect("orderPage")
 
 
 class AddPickListView(View):
@@ -231,12 +234,13 @@ class PickListView(View):
         if cart_detail_id != None:
             detail_cart = WinCartDetail.objects.get(cart_det_id=cart_detail_id)
             detail_cart.delete()
-    
+
             return JsonResponse({"result": "삭제되었습니다"}, status=200)
-        
+
         else:
             return JsonResponse({"result": "문제가 발생했습니다 잠시 후 다시 시도해주세요"}, status=200)
-        
+
+
 class RemoveBuyList(View):
     @method_decorator(csrf_exempt)
     def post(self, request):
@@ -245,9 +249,9 @@ class RemoveBuyList(View):
         if cart_detail_id != None:
             detail_cart = WinCartDetail.objects.get(cart_det_id=cart_detail_id)
             detail_cart.delete()
-    
+
             return JsonResponse({"result": "삭제되었습니다"}, status=200)
-        
+
         else:
             return JsonResponse({"result": "문제가 발생했습니다 잠시 후 다시 시도해주세요"}, status=200)
 
@@ -256,16 +260,17 @@ class OrderPageView(View):
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         return View.dispatch(self, request, *args, **kwargs)
-    
-    
+
     def get(self, request):
         user_id = "test1111"
         template = loader.get_template("purchasing/orderPage.html")
-        
+
         context = {}
         return HttpResponse(template.render(context, request))
-    
+
     def post(self, request):
+        template = loader.get_template("purchasing/orderPage.html")
+
         user_id = "test1111"
         sell_id = request.POST.getlist("sellId", None)
         quantity = request.POST.getlist("quantity", None)
@@ -294,15 +299,16 @@ class OrderPageView(View):
                 enc_receive_codes = []
                 purchase_detail_ids = insert_purchase(result)
                 for i in range(len(purchase_detail_ids)):
-                    receive_code = create_receive_code(purchase_info= purchase_detail_ids[i])
+                    receive_code = create_receive_code(
+                        purchase_info=purchase_detail_ids[i]
+                    )
                     receive_codes.append(receive_code)
-                    enc_receive_code = encrypt_receive_code(receive_code= receive_code)
+                    enc_receive_code = encrypt_receive_code(receive_code=receive_code)
                     enc_receive_codes.append(enc_receive_code)
-                    
-                    
-                    
+                insert_enc_receive_codes(enc_receive_codes)
+
             except DatabaseError as dberror:
                 print(dberror)
                 return redirect("purchaseError")
-
-            return redirect("orderPage")
+            context = {"receive_codes": receive_codes}
+            return HttpResponse(template.render(context, request))

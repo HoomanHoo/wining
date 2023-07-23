@@ -8,8 +8,13 @@ from store.models import WinStore, WinSell
 from detail.models import WinWine
 from django.utils.dateformat import DateFormat
 from datetime import datetime
-from store.db_access.query_set import insert_store_info, insert_sell_info,\
-    delete_store_info, check_store_product_info, check_store_regist_number
+from store.db_access.query_set import (
+    insert_store_info,
+    insert_sell_info,
+    delete_store_info,
+    check_store_product_info,
+    check_store_regist_number,
+)
 from django.db.utils import DatabaseError
 
 
@@ -35,15 +40,14 @@ class StoreRegistrationView(View):
     def post(self, request):
         user_id = request.POST.get("userId", None)
         main_address = request.POST.get("mainAddress", None)
-        detail_address = request.POST.get("detailAddress",None)
+        detail_address = request.POST.get("detailAddress", None)
         store_name = request.POST.get("storeName", None)
         store_reg_num = request.POST.get("storeRegNum", None)
         store_email = request.POST.get("storeEmail")
         store_map_url = request.POST.get("storeMapUrl", None)
-        
-        store_address = main_address + " " + detail_address
-        #파이썬에서도 정규식 검증하고 db insert하기
 
+        store_address = main_address + " " + detail_address
+        # 파이썬에서도 정규식 검증하고 db insert하기
 
         try:
             insert_store_info(
@@ -54,31 +58,32 @@ class StoreRegistrationView(View):
                 store_email=store_email,
                 store_map_url=store_map_url,
             )
-        
+
         except DatabaseError:
             redirect("storeError")
-        
+
         return redirect("productAddition")
+
 
 class CheckStoreRegistNumberView(View):
     def get(self, request):
         reg_num = request.GET.get("regnum", None)
-        
+
         if reg_num == None:
             return JsonResponse({"result": "문제가 발생했습니다 잠시 후 다시 시도해주세요"}, status=200)
-        
-        
+
         else:
-            
-            result = check_store_regist_number(reg_num = reg_num)
-            
+            result = check_store_regist_number(reg_num=reg_num)
+
             if result == True:
-                return JsonResponse({"result": "유효한 사업자 등록번호입니다",
-                                     "code": "1"}, status=200)
-            
+                return JsonResponse(
+                    {"result": "유효한 사업자 등록번호입니다", "code": "1"}, status=200
+                )
+
             else:
-                return JsonResponse({"result": "이미 등록된 사업자 등록번호입니다",
-                                     "code": "-1"}, status=200)
+                return JsonResponse(
+                    {"result": "이미 등록된 사업자 등록번호입니다", "code": "-1"}, status=200
+                )
 
 
 class ProductAdditionView(View):
@@ -115,8 +120,7 @@ class ProductAdditionView(View):
         btn_product_add = request.POST.get("btnProductAdd", None)
         btn_back = request.POST.get("btnBack", None)
         current_time = DateFormat(datetime.now()).format("Y-m-d H:i:s")
-        
-        
+
         if btn_product_add != None:
             print("product add")
             try:
@@ -131,16 +135,15 @@ class ProductAdditionView(View):
                 )
             except DatabaseError:
                 return redirect("storeError")
-        
+
         elif btn_cancel_regist != None:
-            delete_store_info(store_id= store_id)
-            return redirect("storeRegistration")    #user mypage로 리다이렉트 해야함
-        
+            delete_store_info(store_id=store_id)
+            return redirect("storeRegistration")  # user mypage로 리다이렉트 해야함
+
         elif btn_back != None:
-            delete_store_info(store_id= store_id)
+            delete_store_info(store_id=store_id)
             return redirect("storeRegistration")
-        
-        
+
         return redirect("storeMyPage")
 
 
@@ -189,3 +192,14 @@ class StoreMyPageView(View):
         context = {"user_id": user_id}
 
         return HttpResponse(template.render(context, request))
+
+
+class SearchReceiveCodeView(View):
+    def get(self, request):
+        template = loader.get_template("store/searchReceiveCode.html")
+        user_id = "test5555"
+
+        context = {}
+        return HttpResponse(template.render(context, request))
+
+    # 수령코드 get 방식으로 검색할지 post 방식으로 검색할지 결정하기

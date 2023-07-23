@@ -1,7 +1,13 @@
 from django.db import transaction
 from django.db.models.query import QuerySet
 from django.db.models import F
-from purchasing.models import WinPurchase, WinPurchaseDetail, WinCart, WinCartDetail
+from purchasing.models import (
+    WinPurchase,
+    WinPurchaseDetail,
+    WinCart,
+    WinCartDetail,
+    WinReceiveCode,
+)
 from store.models import WinSell, WinRevenue
 from user.models import WinUser
 
@@ -44,9 +50,10 @@ def insert_purchase(result: dict) -> list:
         )
         purchase_detail_infos.append(purchase_detail_info)
     WinPurchaseDetail.objects.bulk_create(purchase_detail_infos)
-    
-    purchase_detail_ids = WinPurchaseDetail.objects.filter(purchase_id = purchase_id).values_list("purchase_detail_id")
-    
+
+    purchase_detail_ids = WinPurchaseDetail.objects.filter(
+        purchase_id=purchase_id
+    ).values_list("purchase_detail_id")
 
     update_point = WinUser.objects.get(user_id=user_id)
     update_point.user_point = user_point
@@ -73,17 +80,18 @@ def insert_purchase(result: dict) -> list:
 
     return purchase_detail_ids
 
+
 @transaction.atomic
-def add_cart_info(user_id: str, sell_id: str, quantity: int, current_time: str):
+def add_cart_info(user_id: str, sell_id: str, quantity: int, current_time: str) -> None:
     cart_id = get_cart_id(user_id)
     print(cart_id)
     if cart_id == None:
         print("cartId is None!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         cart_info = WinCart(
-            # cart_id=4, 
-            user_id=user_id, 
-            cart_time=current_time, 
-            cart_state=1
+            # cart_id=4,
+            user_id=user_id,
+            cart_time=current_time,
+            cart_state=1,
         )
         cart_info.save()
         cart_id = cart_info.cart_id
@@ -94,8 +102,11 @@ def add_cart_info(user_id: str, sell_id: str, quantity: int, current_time: str):
     cart_detail_info.save()
 
 
-def get_cart_id(user_id: str) -> str or None:
+def insert_enc_receive_codes(enc_receive_codes: list) -> None:
+    WinReceiveCode.objects.bulk_create(enc_receive_codes)
 
+
+def get_cart_id(user_id: str) -> str or None:
     cart_info = WinCart.objects.filter(user_id=user_id, cart_state=1).values("cart_id")
     if len(cart_info) == 0:
         cart_id = None

@@ -26,7 +26,7 @@ class WinPurchaseDetail(models.Model):
     purchase_det_state = models.IntegerField()
 
     class Meta:
-      #  managed = False
+        #  managed = False
         db_table = "win_purchase_detail"
 
 
@@ -37,7 +37,7 @@ class WinCart(models.Model):
     cart_state = models.IntegerField()
 
     class Meta:
-    #    managed = False
+        #    managed = False
         db_table = "win_cart"
 
 
@@ -54,7 +54,8 @@ class WinCartDetail(models.Model):
 
 class WinReceiveCode(models.Model):
     receive_code_id = models.AutoField(primary_key=True)
+    cart_det_id = models.ForeignKey("WinCartDetail", models.CASCADE)
     receive_code = models.CharField(max_length=200)
-    
+
     class Meta:
         db_table = "win_receive_code"
