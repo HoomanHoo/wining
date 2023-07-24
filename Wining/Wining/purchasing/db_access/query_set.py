@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models.query import QuerySet
+from django.db.models.query import QuerySet, Prefetch
 from django.db.models import F
 from purchasing.models import (
     WinPurchase,
@@ -30,6 +30,7 @@ def insert_purchase(result: dict) -> list:
 
     purchase_detail_infos = []
     revenues = []
+    purchase_infos = []
 
     purchase_info = WinPurchase(
         user_id=user_id,
@@ -39,9 +40,10 @@ def insert_purchase(result: dict) -> list:
     )
     purchase_info.save()
     purchase_id = purchase_info.purchase_id
+    purchase_infos.append(purchase_id)
+
     for i in range(len(result.get("product_infos"))):
         purchase_detail_info = WinPurchaseDetail(
-            # purchase_detail_id=i + 33,
             purchase_id=purchase_id,
             sell_id=sell_ids[i],
             purchase_det_number=purchase_det_numbers[i],
@@ -54,11 +56,10 @@ def insert_purchase(result: dict) -> list:
     purchase_detail_ids = WinPurchaseDetail.objects.filter(
         purchase_id=purchase_id
     ).values_list("purchase_detail_id")
+    purchase_infos.append(purchase_detail_ids)
 
     update_point = WinUser.objects.get(user_id=user_id)
     update_point.user_point = user_point
-    print(user_point)
-    print(update_point.save())
 
     for i in range(len(sell_ids)):
         print(sell_ids[i])
@@ -78,7 +79,7 @@ def insert_purchase(result: dict) -> list:
         update_cart_info.cart_state = -1
         update_cart_info.save()
 
-    return purchase_detail_ids
+    return purchase_infos
 
 
 @transaction.atomic
@@ -86,9 +87,7 @@ def add_cart_info(user_id: str, sell_id: str, quantity: int, current_time: str) 
     cart_id = get_cart_id(user_id)
     print(cart_id)
     if cart_id == None:
-        print("cartId is None!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         cart_info = WinCart(
-            # cart_id=4,
             user_id=user_id,
             cart_time=current_time,
             cart_state=1,
@@ -262,3 +261,35 @@ def get_user_point(user_id: str) -> int:
 
 def get_enc_receive_codes(cart_detail_id: str) -> list:
     pass
+
+
+def get_detail_info(purchase_id):
+    """
+    SELECT *
+    FROM win_purchase wp
+    INNER JOIN win_purchase_detail wpd
+    ON wp.purchase_id = wpd.purchase_id
+    INNER JOIN win_receive_code wrc
+    ON wpd.purchase_detail_id = wrc.purchase_detail_id_id
+    WHERE wp.purchase_id = 61
+    """
+
+    detail_infos = (
+        WinReceiveCode.objects.select_related("purchase_detail_id")
+        .select_related(
+            "purchase_detail_id__sell",
+            "purchase_detail_id__sell__wine",
+            "purchase_detail_id__sell__store",
+        )
+        .filter(purchase_detail_id__purchase_id=purchase_id)
+        .values(
+            "purchase_detail_id__sell__wine__wine_name",
+            "purchase_detail_id__purchase_det_number",
+            "purchase_detail_id__purchase_det_price",
+            "purchase_detail_id__sell__store__store_name",
+            "purchase_detail_id__sell__store__store_address",
+            "receive_code",
+        )
+    )
+
+    return detail_infos

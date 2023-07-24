@@ -14,6 +14,8 @@ from store.db_access.query_set import (
     delete_store_info,
     check_store_product_info,
     check_store_regist_number,
+    get_store_info,
+    get_detail_sell_list,
 )
 from django.db.utils import DatabaseError
 
@@ -46,7 +48,7 @@ class StoreRegistrationView(View):
         store_email = request.POST.get("storeEmail")
         store_map_url = request.POST.get("storeMapUrl", None)
 
-        store_address = main_address + " " + detail_address
+        store_address = main_address + "@" + detail_address
         # 파이썬에서도 정규식 검증하고 db insert하기
 
         try:
@@ -203,3 +205,111 @@ class SearchReceiveCodeView(View):
         return HttpResponse(template.render(context, request))
 
     # 수령코드 get 방식으로 검색할지 post 방식으로 검색할지 결정하기
+
+
+class StoreInfoView(View):
+    def get(self, request):
+        template = loader.get_template("store/storeInfo.html")
+        user_id = "test5555"
+        info = get_store_info(user_id=user_id)[0]
+        full_address = info.get("store_address").split("@")
+        main_address = full_address[0]
+        detail_address = full_address[1]
+
+        context = {
+            "info": info,
+            "main_address": main_address,
+            "detail_address": detail_address,
+        }
+        return HttpResponse(template.render(context, request))
+
+
+class StoreInfoModificationView(View):
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return View.dispatch(self, request, *args, **kwargs)
+
+    def get(self, request):
+        template = loader.get_template("store/storeInfoModification.html")
+        user_id = "test5555"
+        info = get_store_info(user_id=user_id)[0]
+        full_address = info.get("store_address").split("@")
+        main_address = full_address[0]
+        detail_address = full_address[1]
+
+        context = {
+            "info": info,
+            "main_address": main_address,
+            "detail_address": detail_address,
+        }
+        return HttpResponse(template.render(context, request))
+
+    def post(self, request):
+        user_id = "test5555"
+        main_address = request.POST.get("mainAddress", None)
+        detail_address = request.POST.get("detailAddress", None)
+        store_name = request.POST.get("storeName", None)
+        store_reg_num = request.POST.get("storeRegNum", None)
+        store_email = request.POST.get("storeEmail")
+        store_map_url = request.POST.get("storeMapUrl", None)
+
+        store_address = main_address + "@" + detail_address
+        # 파이썬에서도 정규식 검증하고 db insert하기
+
+        try:
+            insert_store_info(
+                user_id=user_id,
+                store_address=store_address,
+                store_name=store_name,
+                store_reg_num=store_reg_num,
+                store_email=store_email,
+                store_map_url=store_map_url,
+            )
+
+        except DatabaseError:
+            redirect("storeError")
+
+        return redirect("storeInfo")
+
+
+class SellListView(View):
+    def get(self, request):
+        user_id = "test6666"
+        page_num = request.GET.get("pageNum", 1)
+        template = loader.get_template("store/sellList.html")
+        list_count = 30
+        end = int(list_count) * int(page_num)
+        start = end - 29
+        # list_info = 
+
+
+
+class SellDetailListView(View):
+    def get(self, request):
+        user_id = "test6666"
+        page_num = request.GET.get("pageNum", 1)
+        template = loader.get_template("store/sellDetailList.html")
+        list_count = 30
+        end = int(list_count) * int(page_num)
+        start = end - 29
+        list_info = get_detail_sell_list(user_id=user_id, start = start, end = end)
+        # detail_sell_list()
+        list_length = list_info[0]
+        detail_sell_list = list_info[1]
+        pages = (list_length // list_count) + 1
+        print(list_info[0])
+        print(list_count)
+        
+        
+        pages = [i + 1 for i in range(pages)]
+
+        context = {"list": detail_sell_list,
+                   "pages": pages}
+        return HttpResponse(template.render(context, request))
+    
+    
+    
+class ProductListView(View):
+    def get(self, request):
+        template = loader.get_template("store/productList.html")
+      #  WinSell/WinWine 해내야함

@@ -4,10 +4,10 @@ from django.template import loader
 from django.http.response import HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from purchasing.usecase.purchase_usecase import (
-    calc,
+from purchasing.usecase.purchase_usecase import calc
+from purchasing.usecase.receive_code_create_enc_dec_module import (
     create_receive_code,
-    encrypt_receive_code,
+    EncDecModule,
 )
 
 
@@ -23,19 +23,20 @@ from purchasing.db_access.query_set import (
     add_cart_info,
     get_cart_id,
     get_cart_list_page_info,
+    get_detail_info,
 )
 
 from purchasing.usecase.purchase_usecase import formating
 from django.db import DatabaseError
 import json
-from purchasing.models import WinCartDetail
-import errorhandling
+from purchasing.models import WinCartDetail, WinReceiveCode, WinPurchaseDetail
+import base64
 
 
 # Create your views here.
 class StoreListView(View):
     def get(self, request):
-        wine_id = 5
+        wine_id = 10
         template = loader.get_template("purchasing/storeList.html")
 
         store_lists = get_store_lists(wine_id=wine_id)
@@ -297,18 +298,38 @@ class OrderPageView(View):
             try:
                 receive_codes = []
                 enc_receive_codes = []
-                purchase_detail_ids = insert_purchase(result)
+                purchase_infos = insert_purchase(result)
+                purchase_id = purchase_infos[0]
+                purchase_detail_ids = purchase_infos[1]
+                enc_dec_module = EncDecModule()
+                print("purchase_detail_ids: ", purchase_detail_ids)
                 for i in range(len(purchase_detail_ids)):
                     receive_code = create_receive_code(
-                        purchase_info=purchase_detail_ids[i]
+                        purchase_info=purchase_detail_ids[i][0]
                     )
                     receive_codes.append(receive_code)
-                    enc_receive_code = encrypt_receive_code(receive_code=receive_code)
-                    enc_receive_codes.append(enc_receive_code)
+                    enc_receive_code = enc_dec_module.encrypt_receive_code(
+                        receive_code=receive_code
+                    )
+                    queryset = WinReceiveCode(
+                        purchase_detail_id=WinPurchaseDetail(
+                            pk=purchase_detail_ids[i][0]
+                        ),
+                        receive_code=enc_receive_code,
+                    )
+                    enc_receive_codes.append(queryset)
                 insert_enc_receive_codes(enc_receive_codes)
+
+                detail_infos = get_detail_info(purchase_id)
+                print(detail_infos)
+                for i in range(len(detail_infos)):
+                    receive_code = base64.b64decode(
+                        detail_infos[i].get("receive_code")
+                    ).decode("utf-8")
+                    detail_infos[i]["receive_code"] = receive_code
 
             except DatabaseError as dberror:
                 print(dberror)
                 return redirect("purchaseError")
-            context = {"receive_codes": receive_codes}
+            context = {"detail_infos": detail_infos}
             return HttpResponse(template.render(context, request))

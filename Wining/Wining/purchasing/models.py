@@ -54,8 +54,8 @@ class WinCartDetail(models.Model):
 
 class WinReceiveCode(models.Model):
     receive_code_id = models.AutoField(primary_key=True)
-    cart_det_id = models.ForeignKey("WinCartDetail", models.CASCADE)
-    receive_code = models.CharField(max_length=200)
+    purchase_detail_id = models.ForeignKey("WinPurchaseDetail", models.CASCADE)
+    receive_code = models.BinaryField(max_length=500)
 
     class Meta:
         db_table = "win_receive_code"

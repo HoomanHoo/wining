@@ -12,10 +12,50 @@
         <script src="/static/js/detailProductInfoScript.js" defer></script>
     </head>
     <body>
-        {% for receive_code in receive_codes %}
+    	<div class="row">
+    		<div class="col">
+    			수령 코드
+    		</div>
+    	</div>
+    	<div class="row">
+    		<div class="col">
+    			제품명
+    		</div>
+    		<div class="col-1">
+    			수량
+    		</div>
+    		<div class="col">
+    			가격
+    		</div>
+    		<div class="col">
+    			점포명
+    		</div>
+    		<div class="col">
+    			점포 주소
+    		</div>
+    		<div class="col">
+    			수령코드
+    		</div>
+    	</div>
+        {% for detail_info in detail_infos %}
             <div class="row">
                 <div class="col">
-                    {{receive_code}}
+                    {{detail_info.purchase_detail_id__sell__wine__wine_name}}
+                </div>
+                <div class="col-1">
+                    {{detail_info.purchase_detail_id__purchase_det_number}}
+                </div>
+                <div class="col">
+                    {{detail_info.purchase_detail_id__purchase_det_price}}
+                </div>
+                <div class="col">
+                    {{detail_info.purchase_detail_id__sell__store__store_name}}
+                </div>
+                <div class="col">
+                    {{detail_info.purchase_detail_id__sell__store__store_address}}
+                </div>
+                <div class="col">
+                    {{detail_info.receive_code}}
                 </div>
             </div>
         {% endfor %}

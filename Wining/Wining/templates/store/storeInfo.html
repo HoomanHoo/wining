@@ -24,7 +24,15 @@
                     매장 주소
                 </div>
                 <div class="col" style="text-align: left;">
-                    {{dto.store_address}}
+                    {{main_address}}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    
+                </div>
+                <div class="col" style="text-align: left;">
+                    {{detail_address}}
                 </div>
             </div>
             <div class="row">
@@ -32,7 +40,7 @@
                     상호명
                 </div>
                 <div class="col" style="text-align: left;">
-                    {{dto.store_name}}
+                    {{info.store_name}}
                 </div>
             </div>
             <div class="row">
@@ -40,7 +48,7 @@
                     사업자 등록 번호
                 </div>
                 <div class="col" style="text-align: left;">
-                    {{dto.store_reg_num}}
+                    {{info.store_reg_num}}
                 </div>
             </div>
             <div class="row">
@@ -48,7 +56,7 @@
                     지도 URL
                 </div>
                 <div class="col" style="text-align: left;">
-                    {{dto.store_map_url}}
+                    {{info.store_map_url}}
                 </div>
             </div>
             <div class="row">
@@ -56,7 +64,7 @@
                     업무용 이메일
                 </div>
                 <div class="col" style="text-align: left;">
-                    {{dto.store_email}}
+                    {{info.store_email}}
                 </div>
             </div>
         </div>
@@ -64,13 +72,13 @@
     <div class="row" style="text-align: center;">
         <div class="col"></div>
         <div class="col">
-            <input type="button" id="btnModification" value="정보 수정">
+            <input type="button" id="btnModification" value="정보 수정" onclick="location='store-info-modification'">
         </div>
         <div class="col">
-            <input type="button" id="btnWithdrawal" value="회원 탈퇴">
+            <input type="button" id="btnWithdrawal" value="회원 탈퇴" onclick="location='cancel-store'">
         </div>
         <div class="col">
-            <input type="button" id="btnBack" value="뒤로가기">
+            <input type="button" id="btnBack" value="뒤로가기" onclick="location='store-mypage'">
         </div>
         <div class="col"></div>
     </div>

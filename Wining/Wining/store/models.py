@@ -39,7 +39,7 @@ class WinStoreUrl(models.Model):
 
 class WinRevenue(models.Model):
     revenue_id = models.AutoField(primary_key=True)
-    store = models.ForeignKey("WinStore", models.DO_NOTHING, default='')
+    store = models.ForeignKey("WinStore", models.DO_NOTHING)
     revenue_value = models.IntegerField()
     revenue_date = models.DateTimeField()
 
@@ -51,7 +51,7 @@ class WinRevenue(models.Model):
 class WinSell(models.Model):
     sell_id = models.AutoField(primary_key=True)
     store = models.ForeignKey("WinStore", models.DO_NOTHING, related_name="storeSell")
-    wine = models.ForeignKey("detail.WinWine", models.DO_NOTHING, default='')
+    wine = models.ForeignKey("detail.WinWine", models.DO_NOTHING)
     sell_reg_time = models.DateTimeField()
     sell_price = models.IntegerField()
     sell_promot = models.TextField()
