@@ -30,4 +30,11 @@ urlpatterns = [
     ),
     path("sell-detail-list", views.SellDetailListView.as_view(), name="sellList"),
     path("product-list", views.ProductListView.as_view(), name="productList"),
+    path(
+        "discontinue-product",
+        views.DiscontinueProductView.as_view(),
+        name="discontinueProduct",
+    ),
+    path("drop-store", views.DropStoreView.as_view(), name="dropStore"),
+    path("store-revenue", views.StoreRevenueMainView.as_view(), name="storeRevenue")
 ]

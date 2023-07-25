@@ -56,7 +56,8 @@
 				<input type="text" name="sellPromot" value="{{dto.sell_promot}}">
 			</div>
 			<div class="col">
-				<input type="button" name="btnShowProductReview" value="판매 중단">
+				<input type="button" name="btnShowProductReview" value="리뷰 보기">
+				<input type="hidden" name="btnDiscontinue" value="판매 중단">
 			</div>
 		</div>
 	{% endfor %}
@@ -64,11 +65,6 @@
 		<div class="row">
 			<div class="col" style="text-align:center">
 				<input type="submit" id="btnModify" value="수정">
-			
-				<input type="button" id="btnProductAdd" value="추가">
-
-				<input type="button" id="btnExcelUpload" value="엑셀로추가">
-
 				<input type="button" id="btnBack" value="뒤로가기">
 			</div>
 		</div>

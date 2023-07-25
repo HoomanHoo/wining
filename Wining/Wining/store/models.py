@@ -9,11 +9,12 @@ class WinStore(models.Model):
     user = models.ForeignKey("user.WinUser", models.DO_NOTHING)
     store_address = models.CharField(max_length=200)
     store_name = models.CharField(max_length=100)
-    store_reg_num = models.CharField(unique=True, max_length=20)
+    store_reg_num = models.CharField(max_length=20)
     store_email = models.CharField(max_length=50)
+    store_state = models.IntegerField(default=0)
 
     class Meta:
-        managed = False
+        # managed = False
         db_table = "win_store"
 
 
@@ -39,7 +40,7 @@ class WinStoreUrl(models.Model):
 
 class WinRevenue(models.Model):
     revenue_id = models.AutoField(primary_key=True)
-    store = models.ForeignKey("WinStore", models.DO_NOTHING)
+    store = models.ForeignKey("WinStore", models.DO_NOTHING, related_name="revenue")
     revenue_value = models.IntegerField()
     revenue_date = models.DateTimeField()
 

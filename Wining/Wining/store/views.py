@@ -16,8 +16,13 @@ from store.db_access.query_set import (
     check_store_regist_number,
     get_store_info,
     get_detail_sell_list,
+    get_product_list_by_seller,
+    delete_product,
+    check_passwd,
+    drop_store_info, get_store_revenue,
 )
 from django.db.utils import DatabaseError
+import json
 
 
 # Create your views here.
@@ -29,7 +34,7 @@ class StoreRegistrationView(View):
         return View.dispatch(self, request, *args, **kwargs)
 
     def get(self, request):
-        user_id = "test5555"
+        user_id = "test4444"
         print(check_store_product_info(user_id=user_id))
         if check_store_product_info(user_id=user_id):
             return redirect("storeMyPage")
@@ -94,33 +99,35 @@ class ProductAdditionView(View):
         return View.dispatch(self, request, *args, **kwargs)
 
     def get(self, request):
-        user_id = "test5555"
+        user_id = "test4444"
+        modify = request.GET.get("mdfy", None)
+        print(modify)
+        wines = WinWine.objects.values(
+            "wine_id", "wine_name", "wine_capacity", "wine_alc"
+        )
+        product_list = get_product_list_by_seller(user_id=user_id)
+        store_id = WinStore.objects.get(user_id=user_id).store_id
 
-        store_info = WinStore.objects.get(user_id=user_id)
-        if WinSell.objects.filter(store_id=store_info.store_id):
-            return redirect("storeMyPage")
-
-        else:
-            wines = WinWine.objects.values(
-                "wine_id", "wine_name", "wine_capacity", "wine_alc"
-            )
-
-            store_id = store_info.store_id
-
-            template = loader.get_template("store/productAddition.html")
-            context = {"wines": wines, "store_id": store_id}
-            return HttpResponse(template.render(context, request))
+        template = loader.get_template("store/productAddition.html")
+        context = {
+            "wines": wines,
+            "store_id": store_id,
+            "product_list": product_list,
+            "modify": modify,
+        }
+        return HttpResponse(template.render(context, request))
 
     def post(self, request):
-        user_id = "test5555"
+        user_id = "test4444"
         store_id = request.POST.get("storeId", None)
+        sell_ids = request.POST.getlist("sellId", None)
         wine_ids = request.POST.getlist("wineId", None)
         sell_prices = request.POST.getlist("sellPrice", None)
         sell_promots = request.POST.getlist("sellPromot", None)
         sell_state = 1
         btn_cancel_regist = request.POST.get("btnCancelRegist", None)
         btn_product_add = request.POST.get("btnProductAdd", None)
-        btn_back = request.POST.get("btnBack", None)
+        btn_back = request.POST.get("btnBackRegist", None)
         current_time = DateFormat(datetime.now()).format("Y-m-d H:i:s")
 
         if btn_product_add != None:
@@ -131,10 +138,15 @@ class ProductAdditionView(View):
                     store_id,
                     wine_ids,
                     current_time,
+                    sell_ids,
                     sell_prices,
                     sell_promots,
                     sell_state,
                 )
+                if len(sell_ids) != 0:
+                    return redirect("productList")
+                else:
+                    return redirect("storeMyPage")
             except DatabaseError:
                 return redirect("storeError")
 
@@ -145,8 +157,6 @@ class ProductAdditionView(View):
         elif btn_back != None:
             delete_store_info(store_id=store_id)
             return redirect("storeRegistration")
-
-        return redirect("storeMyPage")
 
 
 class SearchProduct(View):
@@ -187,9 +197,19 @@ class SearchProduct(View):
         return JsonResponse({"result": result}, status=200)
 
 
+class DiscontinueProductView(View):
+    def get(self, request):
+        user_id = "test4444"
+        wine_id = request.GET.get("wineid", None)
+        print(wine_id)
+        delete_product(wine_id=wine_id, user_id=user_id)
+
+        return JsonResponse({"result": "삭제되었습니다"}, status=200)
+
+
 class StoreMyPageView(View):
     def get(self, request):
-        user_id = "test5555"
+        user_id = "test4444"
         template = loader.get_template("store/storeMyPage.html")
         context = {"user_id": user_id}
 
@@ -199,7 +219,7 @@ class StoreMyPageView(View):
 class SearchReceiveCodeView(View):
     def get(self, request):
         template = loader.get_template("store/searchReceiveCode.html")
-        user_id = "test5555"
+        user_id = "test4444"
 
         context = {}
         return HttpResponse(template.render(context, request))
@@ -210,7 +230,7 @@ class SearchReceiveCodeView(View):
 class StoreInfoView(View):
     def get(self, request):
         template = loader.get_template("store/storeInfo.html")
-        user_id = "test5555"
+        user_id = "test4444"
         info = get_store_info(user_id=user_id)[0]
         full_address = info.get("store_address").split("@")
         main_address = full_address[0]
@@ -231,7 +251,7 @@ class StoreInfoModificationView(View):
 
     def get(self, request):
         template = loader.get_template("store/storeInfoModification.html")
-        user_id = "test5555"
+        user_id = "test4444"
         info = get_store_info(user_id=user_id)[0]
         full_address = info.get("store_address").split("@")
         main_address = full_address[0]
@@ -245,7 +265,7 @@ class StoreInfoModificationView(View):
         return HttpResponse(template.render(context, request))
 
     def post(self, request):
-        user_id = "test5555"
+        user_id = "test4444"
         main_address = request.POST.get("mainAddress", None)
         detail_address = request.POST.get("detailAddress", None)
         store_name = request.POST.get("storeName", None)
@@ -274,42 +294,84 @@ class StoreInfoModificationView(View):
 
 class SellListView(View):
     def get(self, request):
-        user_id = "test6666"
+        user_id = "test4444"
         page_num = request.GET.get("pageNum", 1)
         template = loader.get_template("store/sellList.html")
         list_count = 30
         end = int(list_count) * int(page_num)
         start = end - 29
-        # list_info = 
-
+        # list_info =
 
 
 class SellDetailListView(View):
     def get(self, request):
-        user_id = "test6666"
+        user_id = "test4444"
         page_num = request.GET.get("pageNum", 1)
         template = loader.get_template("store/sellDetailList.html")
         list_count = 30
         end = int(list_count) * int(page_num)
         start = end - 29
-        list_info = get_detail_sell_list(user_id=user_id, start = start, end = end)
+        list_info = get_detail_sell_list(user_id=user_id, start=start, end=end)
         # detail_sell_list()
         list_length = list_info[0]
         detail_sell_list = list_info[1]
         pages = (list_length // list_count) + 1
-        print(list_info[0])
-        print(list_count)
-        
-        
+
         pages = [i + 1 for i in range(pages)]
 
-        context = {"list": detail_sell_list,
-                   "pages": pages}
+        context = {"list": detail_sell_list, "pages": pages}
         return HttpResponse(template.render(context, request))
-    
-    
-    
+
+
 class ProductListView(View):
     def get(self, request):
         template = loader.get_template("store/productList.html")
-      #  WinSell/WinWine 해내야함
+        user_id = "test4444"
+        product_list = get_product_list_by_seller(user_id=user_id)
+
+        context = {"product_list": product_list}
+
+        return HttpResponse(template.render(context, request))
+
+
+class DropStoreView(View):
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return View.dispatch(self, request, *args, **kwargs)
+
+    def get(self, request):
+        template = loader.get_template("store/dropStore.html")
+        context = {}
+        return HttpResponse(template.render(context, request))
+
+    def post(self, request):
+        passwd = json.loads(request.body).get("passwd", None)
+        user_id = "test4444"
+        result = check_passwd(user_id=user_id, passwd=passwd)
+
+        if result == 0:
+            text = "비밀번호가 다릅니다"
+            code = -1
+
+        elif result == 1:
+            try:
+                drop_store_info(user_id=user_id)
+                text = "등록된 점포가 삭제 되었습니다"
+                code = 1
+            except Exception as ex:
+                text = "문제가 발생했습니다 잠시 후 다시 시도해주세요"
+                code = -1
+                print(ex)
+                return JsonResponse({"result": text, "code": code}, status=200)
+        return JsonResponse({"result": text, "code": code}, status=200)
+
+
+class StoreRevenueMainView(View):
+    def get(self, request):
+        user_id = "test5555"
+        template = loader.get_template("store/storeRevenueMain.html")
+        revenue_info = get_store_revenue(user_id=user_id) 
+        
+        context = {"revenue_info": revenue_info}
+        return HttpResponse(template.render(context, request))
+        

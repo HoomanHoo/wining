@@ -41,16 +41,16 @@
 			
 		</div>
 	</div>
-	{% for dto in dtos %}
+	{% for dto in revenue_info %}
 	<div class="row">
 		<div class="col">
-			{{dto.current_time}}
+			{{dto.revenue_date}}
 		</div>
 		<div class="col">
-			{{dto.all_revenue}}
+			{{dto.sum}}
 		</div>
 		<div class="col">
-			{{dto.all_count}}
+<!--			{{dto.all_count}} -->
 		</div>
 		<div class="col">
 			<input type="button" id="btnDetailRevenue" value="상세정보">

@@ -72,7 +72,18 @@
         	{% csrf_token %}	
 	            <form id="productAdd" action="product-addition" method="post">
 	                <input type="hidden" name="storeId" value="{{store_id}}">
-	                
+	                {% for dto in product_list %}
+                        <div class="row">
+                            <input type="hidden" id="{{dto.storeSell__sell_id}}" class="col" name="sellId" value="{{dto.storeSell__sell_id}}" readonly> 
+                            <input type="hidden" id="{{dto.storeSell__wine__wine_name}}4" class="col" name="wineId" value="{{dto.storeSell__wine__wine_id}}" readonly> 
+                            <input type="text" class="col" name="wineName" value="{{dto.storeSell__wine__wine_name}}" readonly>
+                            <input type="text" class="col-1" name="wineCapacity" value="{{dto.storeSell__wine__wine_capacity}}" readonly>
+                            <input type="text" class="col-1" name="wineAlc" value="{{dto.storeSell__wine__wine_alc}}" readonly>
+                            <input type="text" class="col-1" name="sellPrice" value="{{dto.storeSell__sell_price}}" maxlength=5>
+                            <input type="text" class="col" name="sellPromot" value="{{dto.storeSell__sell_promot}}">
+                            <input type="button" name="btnDelete" class="col-1" value="판매 중지">   
+                        </div>
+                    {% endfor %}
 	            </form>
 	            
 
@@ -80,10 +91,20 @@
     </div>
     <div class="row">
         <div class="col" style="text-align: center;">
-            <input type="submit" name="btnProductAdd" form="productAdd" value="회원가입 완료">
+            {% if modify != '1' %}
+                <input type="submit" name="btnProductAdd" form="productAdd" value="회원가입 완료">
+            {% endif %}
+            {% if modify == '1' %}
+                <input type="submit" name="btnProductAdd" form="productAdd" value="저장">
+            {% endif %}
             <input type="button" name="btnExcelUpload" value="엑셀로 업로드" onclick="location='excel-upload'">
-            <input type="submit" name="btnCancelRegist" form="productAdd" value="등록 취소">
-            <input type="submit" name="btnBack" value="뒤로가기">
+            {% if modify != '1' %}
+                <input type="submit" name="btnCancelRegist" form="productAdd" value="등록 취소">
+                <input type="submit" name="btnBackRegist" value="뒤로가기" onclick="location='store-registration">
+            {% endif %}
+            {% if modify == '1' %}
+                <input type="button" name="btnBack" value="뒤로가기" onclick="location='product-list'">
+            {% endif %}
         </div>
     </div>
 

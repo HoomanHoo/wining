@@ -33,8 +33,8 @@
             <div class="col">
             	<div class="row">
 		            <div class="col">
-		                <input type="text" id="storeAddress" placeholder="매장 주소를 입력해주세요" name="mainAddress" style="width:calc(100%)" readonly>  
-		                <input type="text" id="detailStoreAddress" placeholder="상세 주소를 입력해주세요" name="detailAddress" style="width:calc(100%)">
+		                <input type="text" id="storeAddress" placeholder="매장 주소를 입력해주세요" name="mainAddress" style="width:calc(100%)" value="{{main_address}}" readonly>  
+		                <input type="text" id="detailStoreAddress" placeholder="상세 주소를 입력해주세요" name="detailAddress" value="{{detail_address}}" style="width:calc(100%)">
 		      		</div>	
 	      			<div class="col">
 	      				<div id="mainAddress">
@@ -52,7 +52,7 @@
             <div class="col">
 	        	<div class="row">
 	            	<div class="col">
-	                	<input type="text" id="storeName" placeholder="상호명을 입력해주세요" name="storeName" style="width:calc(100%)">
+	                	<input type="text" id="storeName" placeholder="상호명을 입력해주세요" name="storeName" value="{{info.store_name}}" style="width:calc(100%)">
 	            	</div>
 	       			<div id="name" class="col">
       				</div>
@@ -67,7 +67,7 @@
             	<div class="row">
 		            <div class="col">
 		            	<input type="hidden" id="regNumCheck" name="regNumCheck">
-		                <input type="text" id="storeRegNum" placeholder="000-00-00000" name="storeRegNum" style="width:calc(100%)" readonly>
+		                <input type="text" id="storeRegNum" placeholder="000-00-00000" name="storeRegNum" value="{{info.store_reg_num}}" style="width:calc(100%)" readonly>
 		            </div>
 		            <div id="regNum" class="col">
 		      		</div>
@@ -81,7 +81,7 @@
             <div class="col">
 	            <div class="row">
 		            <div class="col">
-		                <input type="url" placeholder="URL을 입력해주세요" name="storeMapUrl" style="width:calc(100%)">
+		                <input type="url" placeholder="URL을 입력해주세요" name="storeMapUrl" value="{{info.storeUrl__store_map_url}}" style="width:calc(100%)">
 		            </div>
 		            <div id="url" class="col">
 		      		</div>
@@ -96,7 +96,7 @@
             	<div class="row">
 		            <div class="col">
 		            	<input type="hidden" id="emailCheck" name="emailCheck">
-		                <input type="email" id="storeEmail" placeholder="example@example.com" name="storeEmail" style="width:calc(100%)">
+		                <input type="email" id="storeEmail" placeholder="example@example.com" name="storeEmail" value="{{info.store_email}}" style="width:calc(100%)">
 		            </div>
 		            <div id="email" class="col">
 		      		</div>

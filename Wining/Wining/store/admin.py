@@ -11,6 +11,7 @@ class WinStoreAdmin(admin.ModelAdmin):
         "store_name",
         "store_reg_num",
         "store_email",
+        "store_state",
     )
 
 
